@@ -1,0 +1,18 @@
+akzeptierte Eingabe:
+"find <directory name> [-name <pattern>] [-type <f | d>] [-follow] [-xdev]"
+
+-type: spezifiziert reguläre dateien oder ordner, aber nicht beides
+-follow: symbolische links muss gefolgt werden
+-xdev: andere disk partitionen sollen nicht beachtet werden
+-name: wildcards müssen akzepziert werden
+
+treewalker wie zb nftw und ftw müssen selbst gebaut werden!
+
+wildcards:
+ A string is a wildcard pattern if it contains one of the characters `?', `*' or
+          `['. Globbing is the operation that expands a wildcard pattern into the list of
+          pathnames matching the pattern. Matching is defined by:
+          A `?' (not between brackets) matches any single character.
+          A `*' (not between brackets) matches any string, including the empty string.
+          ...
+          (see also glob(7))
