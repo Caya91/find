@@ -16,3 +16,15 @@ wildcards:
           A `*' (not between brackets) matches any string, including the empty string.
           ...
           (see also glob(7))
+
+
+c und linuxfunktionen die für find genutzt werden können
+
+- readdir()
+-stat()
+-fnmatch()
+-glob()
+
+eigene Implementation für:
+- nftw()
+- ftw()
