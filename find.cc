@@ -1,5 +1,9 @@
 #include "argparse/argparse.hpp"
 #include <iostream>
+#include <unistd.h>
+#include <dirent.h>
+
+char * root;
 
 int main(int argc, char *argv[]) {
     //initialise argument parser
@@ -30,13 +34,33 @@ int main(int argc, char *argv[]) {
         std::cerr << find_args;
         exit(0);
     }
-    std::cout << find_args.get("directory") << std::endl;
-    std::cout << find_args << std::endl;
 
-    auto a = find_args.get<bool>("-xdev");
-    std::cout << a << std::endl;
-    auto b = find_args.get<bool>("-follow");
-    std::cout << b << std::endl;
+    //folgende line gibt generelle Information über Argumente zu dem Parser aus
+    //std::cout << find_args << std::endl;
+
+    // standard behaviour for find with no added flags
+    //
+
+
+    //auto a = find_args.get<bool>("-xdev");
+    //std::cout << a << std::endl;
+    //auto b = find_args.get<bool>("-follow");
+    //std::cout << b << std::endl;
+    auto dirname = find_args.get<std::string>("directory");
+    std::cout <<"directory dessen Pfade durchsucht werden sollen: "<< dirname << std::endl;
+
+    // holt sich das aktuelle working directory
+    root = getcwd(nullptr, 0);
+    std::cout << root << std::endl;
+
+    DIR *directory = opendir(dirname.c_str());
+    std::cout << directory << std::endl;
+    if (directory == nullptr) {
+        std::cout << "directory not found" << std::endl;
+        exit(0);
+    }
+
+
 
     return 0;
 }
