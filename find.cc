@@ -2,8 +2,33 @@
 #include <iostream>
 #include <unistd.h>
 #include <dirent.h>
-
+#include <cstring>
 char * root;
+
+void bare_find(DIR *directory)
+{
+    struct dirent *entry;
+    while ((entry = readdir(directory)) != nullptr) {
+        if (entry->d_type == DT_DIR) {
+
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+            //char *path = (char *) malloc(strlen(root) + strlen(entry->d_name) + 2);
+            //strcpy(path, root);
+            //strcat(path, "/");
+            //strcat(path, entry->d_name);
+            DIR *subdir = opendir(entry->d_name);
+            bare_find(subdir);
+            std::cout << "directory: " << entry->d_name << std::endl;
+            //free(path);
+        }
+        else if (entry->d_type == DT_REG)
+        {
+            std::cout << entry->d_name << std::endl;
+        }
+    }
+
+};
+
 
 int main(int argc, char *argv[]) {
     //initialise argument parser
@@ -60,6 +85,7 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
 
+    bare_find(directory);
 
 
     return 0;
