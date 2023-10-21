@@ -1,8 +1,14 @@
-#include "argparse/argparse.hpp"
+#include <string>
 #include <iostream>
-#include <unistd.h>
 #include <dirent.h>
+#include<filesystem>
+#include <set>
+#include <fnmatch.h>
+#include <sys/stat.h>
+#include <cstdlib>
 #include <cstring>
+#include "argparse/argparse.hpp"
+#include <unistd.h>
 
 char *root;
 void bare(const std::string &path, const std::string& dirname);
@@ -29,9 +35,16 @@ int main (int argc, char *argv[])
     auto dirname = find_args.get<std::string>("directory");
     std::cout <<"directory dessen Pfade durchsucht werden sollen: "<< dirname << std::endl;
 
+    std::string cute ="cute";
+    if (cute.ends_with("/")){
+        printf("cute");
+    }
+
+
     // holt sich das aktuelle working directory
     root = getcwd(nullptr, 0);
     std::cout << "aktuelles Directory " << root << std::endl;
+
 
     DIR *directory = opendir(dirname.c_str());
     std::cout << directory << std::endl;

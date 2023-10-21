@@ -6,13 +6,13 @@ DEP = $(SRC:.cc=.d)
 all: $(TGT) directory
 
 $(TGT): $(OBJ)
-	g++ -std=c++17 -o $@ $+
+	g++ -std=c++20 -o $@ $+
 
 directory: directory.o
-	g++ -std=c++17 -o $@ $+
+	g++ -std=c++20 -o $@ $+
 
 %.o: %.c Makefile
-	g++ -std=c++17 -Wall -Werror -MMD -c -o $@ $<
+	g++ -std=c++20 -Wall -Werror -MMD -c -o $@ $<
 
 
 clean:
