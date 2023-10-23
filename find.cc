@@ -12,8 +12,8 @@
 
 namespace fs = std::filesystem;
 bool xdev, follow;
-enum Type{A, F, D};
-Type u_type;
+enum Type{All=0, File=1, Directory=2};
+Type arg_type;
 //std::string root;
 
 Type cast_Type(std::string type);
@@ -26,6 +26,15 @@ int main(int argc, char *argv[]) {
     find_args.add_argument("directory").default_value(".").required()
         .help("Verzeichnis in dem gesucht werden soll");
     find_args.add_argument("-type")
+        .default_value(std::string{"a"})
+        .action([](const std::string& value){
+            static const std::vector<std::string> choices = { "d", "f"};
+            if (std::find(choices.begin(), choices.end(), value) !=choices.end()){
+                return value;
+            }
+            std::cout <<"find: Unknown argument to -type: " << value << std::endl;
+            exit(0); // bei unbekanntem Input für "-type" beenden
+        })
         .help("f fuer file | d fuer directory");
     find_args.add_argument("-name")
         .default_value("*")
@@ -49,13 +58,16 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
 
-    // check for xdev option and
+    auto input = find_args.get("-type");
+    std::cout << input << std::endl;
 
+    // check for xdev and other options
 
+    arg_type = cast_Type(find_args.get<std::string>("-type"));
+    std::cout << arg_type << std::endl;
     auto name = find_args.get<std::string>("-name");
     follow = find_args.get<bool>("-follow");
     xdev = find_args.get<bool>("-xdev");
-    u_type = cast_Type(find_args.get<std::string>("-type"));
     if (xdev){
         std::cout << "xdev present" <<  std::endl;
     }else {
@@ -92,7 +104,7 @@ int main(int argc, char *argv[]) {
         // aus und verlässt das if statement
 
         auto file_n =fs::status(root + "/" + dirname);
-        if (is_regular_file(file_n)){
+        if ((is_regular_file(file_n) && arg_type == File ||arg_type ==  All)){
             std::cout << dirname << std::endl;
             exit(0);
         }
@@ -119,24 +131,26 @@ void bare(const std::string &path,const std::string& dirname){
         if (strcmp(entry->d_name ,".")==0 || strcmp(entry->d_name, "..") == 0){
             continue;
         }
-        else if (entry->d_type == DT_DIR) {
-            std::cout <<path + "/" + entry->d_name << std::endl;
-            bare(std::string(path + "/" + entry->d_name), dirname);
+        else if (entry->d_type == DT_DIR ) {
+            if ( arg_type == Directory || arg_type == All){
+                std::cout << path + "/" + entry->d_name << std::endl;
+            }
+                bare(std::string(path + "/" + entry->d_name), dirname);
 
-        } else if (entry->d_type == DT_REG) {
+        } else if (entry->d_type == DT_REG && (arg_type ==File || arg_type == All)) {
             std::cout <<path + "/" + entry->d_name << std::endl;;
         } else {
-            std::cout << "other: " <<  entry->d_name << std::endl;;
+            continue;
         }
     }
-
-
 }
 
-Type cast_Type(std::string type){
+Type cast_Type(std::string const type){
     if(type.starts_with("d")){
-        return D;
+        return Directory;
     }else if (type.starts_with("f")){
-        return F;
+        return File;
+    }else{
+        return All;
     }
 }
