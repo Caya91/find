@@ -20,7 +20,7 @@ wildcards:
 
 c und linuxfunktionen die für find genutzt werden können
 
-- readdir()
+-readdir()
 -stat()
 -fnmatch()
 -glob()
