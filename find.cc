@@ -109,8 +109,6 @@ int main(int argc, char *argv[]) {
 
     }
 
-
-    std::cout << find_args.get<std::string>("-name") << std::endl;
     bare(dirname, dirname, find_args.get<std::string>("-name"));
 
     return 0;
