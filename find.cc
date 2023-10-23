@@ -58,9 +58,9 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
 
+
+
     // check for xdev and other options
-
-
 
     arg_type = cast_Type(find_args.get<std::string>("-type"));
     std::cout << arg_type << std::endl;
@@ -123,6 +123,7 @@ void bare(const std::string &path,const std::string& dirname, const std::string&
             continue;
         }
         else if (entry->d_type == DT_DIR ) {
+
             if ( (arg_type == Directory || arg_type == All)
             && (fnmatch(name.c_str(), entry->d_name,FNM_FILE_NAME)==0))
             {
