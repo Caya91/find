@@ -1,34 +1,23 @@
-#include "argparse/argparse.hpp"
+#include <string>
 #include <iostream>
-#include <unistd.h>
 #include <dirent.h>
+#include <filesystem>
+#include <set>
+#include <fnmatch.h>
+#include <sys/stat.h>
+#include <cstdlib>
 #include <cstring>
-char * root;
+#include "argparse/argparse.hpp"
+#include <unistd.h>
 
-void bare_find(DIR *directory)
-{
-    struct dirent *entry;
-    while ((entry = readdir(directory)) != nullptr) {
-        if (entry->d_type == DT_DIR) {
+namespace fs = std::filesystem;
+bool xdev, follow;
+enum Type{A, F, D};
+Type u_type;
+//std::string root;
 
-            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
-            //char *path = (char *) malloc(strlen(root) + strlen(entry->d_name) + 2);
-            //strcpy(path, root);
-            //strcat(path, "/");
-            //strcat(path, entry->d_name);
-            DIR *subdir = opendir(entry->d_name);
-            bare_find(subdir);
-            std::cout << "directory: " << entry->d_name << std::endl;
-            //free(path);
-        }
-        else if (entry->d_type == DT_REG)
-        {
-            std::cout << entry->d_name << std::endl;
-        }
-    }
-
-};
-
+Type cast_Type(std::string type);
+void bare(const std::string &path, const std::string& dirname);
 
 int main(int argc, char *argv[]) {
     //initialise argument parser
@@ -42,7 +31,7 @@ int main(int argc, char *argv[]) {
         .default_value("*")
         .help("Akzeptiert wildcards");
     find_args.add_argument("-xdev")
-        .default_value(false).implicit_value(true)
+        .implicit_value(true).default_value(false)
         .help("Nur auf dem aktuellen Dateisystem suchen");
     find_args.add_argument("-follow")
         .default_value(false).implicit_value(true)
@@ -60,33 +49,94 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
 
+    // check for xdev option and
+
+
+    auto name = find_args.get<std::string>("-name");
+    follow = find_args.get<bool>("-follow");
+    xdev = find_args.get<bool>("-xdev");
+    u_type = cast_Type(find_args.get<std::string>("-type"));
+    if (xdev){
+        std::cout << "xdev present" <<  std::endl;
+    }else {
+        std::cout << "xdev not present" << std::endl;
+    }
+    if (follow){
+        std::cout << "follow present" <<  std::endl;
+    }else {
+        std::cout << "follow not present" << std::endl;
+    }
+    if (strcmp(name.c_str(), "*") != 0) {
+        std::cout << "name present:" << find_args.get("-name") <<std::endl;
+
+    }else {
+        std::cout << "name not present" << std::endl;
+    }
+
+
+
+
     //folgende line gibt generelle Information über Argumente zu dem Parser aus
     //std::cout << find_args << std::endl;
 
     // standard behaviour for find with no added flags
-    //
-
-
-    //auto a = find_args.get<bool>("-xdev");
-    //std::cout << a << std::endl;
-    //auto b = find_args.get<bool>("-follow");
-    //std::cout << b << std::endl;
     auto dirname = find_args.get<std::string>("directory");
-    std::cout <<"directory dessen Pfade durchsucht werden sollen: "<< dirname << std::endl;
 
-    // holt sich das aktuelle working directory
-    root = getcwd(nullptr, 0);
-    std::cout << root << std::endl;
+    // aktueller Pfad desd working directory aktuelle working directory
+    //root = getcwd(nullptr, 0);
 
+    std::string root = getcwd(nullptr, 0);
     DIR *directory = opendir(dirname.c_str());
-    std::cout << directory << std::endl;
     if (directory == nullptr) {
-        std::cout << "directory not found" << std::endl;
+        //ist dirname kein Pfad sondern ein direkter Dateiname, printet es den Namen
+        // aus und verlässt das if statement
+
+        auto file_n =fs::status(root + "/" + dirname);
+        if (is_regular_file(file_n)){
+            std::cout << dirname << std::endl;
+            exit(0);
+        }
+
+        std::cout << "find:" << "'" << dirname << "': "
+                  << "No such file or directory" << std::endl;
         exit(0);
     }
+    else{
+        std::cout << dirname << std::endl;
 
-    bare_find(directory);
+    }
 
+
+
+    bare(dirname, dirname);
 
     return 0;
+}
+
+void bare(const std::string &path,const std::string& dirname){
+    DIR *directory = opendir(path.c_str());
+    while (dirent * entry = readdir(directory)) {
+        if (strcmp(entry->d_name ,".")==0 || strcmp(entry->d_name, "..") == 0){
+            continue;
+        }
+        else if (entry->d_type == DT_DIR) {
+            std::cout <<path + "/" + entry->d_name << std::endl;
+            bare(std::string(path + "/" + entry->d_name), dirname);
+
+        } else if (entry->d_type == DT_REG) {
+            std::cout <<path + "/" + entry->d_name << std::endl;;
+        } else {
+            std::cout << "other: " <<  entry->d_name << std::endl;;
+        }
+    }
+
+
+}
+
+Type cast_Type(std::string type){
+    if(type.starts_with("d")){
+        return D;
+    }else if (type.starts_with("f")){
+        return F;
+    }
 }

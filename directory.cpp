@@ -1,7 +1,7 @@
 #include <string>
 #include <iostream>
 #include <dirent.h>
-#include<filesystem>
+#include <filesystem>
 #include <set>
 #include <fnmatch.h>
 #include <sys/stat.h>
@@ -10,7 +10,12 @@
 #include "argparse/argparse.hpp"
 #include <unistd.h>
 
-char *root;
+// this file has the standard behaviour for find without any flags
+// only directory which is necessary with default behaviour and inputs
+
+
+namespace fs = std::filesystem;
+std::string root;
 void bare(const std::string &path, const std::string& dirname);
 
 int main (int argc, char *argv[])
@@ -32,32 +37,41 @@ int main (int argc, char *argv[])
         exit(0);
     }
 
+
+
+
     auto dirname = find_args.get<std::string>("directory");
-    std::cout <<"directory dessen Pfade durchsucht werden sollen: "<< dirname << std::endl;
 
-    std::string cute ="cute";
-    if (cute.ends_with("/")){
-        printf("cute");
-    }
+    dirname.ends_with("/");
 
 
-    // holt sich das aktuelle working directory
+    // aktueller Pfad des working directory aktuelle working directory
     root = getcwd(nullptr, 0);
-    std::cout << "aktuelles Directory " << root << std::endl;
 
 
     DIR *directory = opendir(dirname.c_str());
-    std::cout << directory << std::endl;
     if (directory == nullptr) {
-        std::cout << "directory not found" << std::endl;
+        //ist dirname kein Pfad sondern ein direkter Dateiname, printet es den Namen
+        // aus und verlässt das if statement
+        auto file_n =fs::status(root + "/" + dirname);
+        if (is_regular_file(file_n)){
+            std::cout << dirname << std::endl;
+            exit(0);
+        }
+        std::cout << "find:" << "'" << dirname << "': "
+        << "No such file or directory" << std::endl;
         exit(0);
+
     }
     else{
-        std::cout << "directory found" << std::endl;
-        std::cout << root << "/" << dirname << std::endl;
+        std::cout << dirname << std::endl;
+
     }
 
-    bare(root, dirname);
+
+
+    bare(dirname, dirname);
+
 
 
     return 0;
@@ -71,12 +85,11 @@ void bare(const std::string &path,const std::string& dirname){
             continue;
         }
         else if (entry->d_type == DT_DIR) {
-            std::cout << "directory: "<< entry->d_name << std::endl;
-            std::cout << "suchen in Pfad: " << path + "/" + entry->d_name << std::endl;
+            std::cout <<path + "/" + entry->d_name << std::endl;
             bare(std::string(path + "/" + entry->d_name), dirname);
 
         } else if (entry->d_type == DT_REG) {
-            std::cout << "file: " << entry->d_name << std::endl;;
+            std::cout <<path + "/" + entry->d_name << std::endl;;
         } else {
             std::cout << "other: " <<  entry->d_name << std::endl;;
         }

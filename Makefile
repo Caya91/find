@@ -2,6 +2,8 @@ SRC = find.cc
 OBJ = $(SRC:.cc=.o)
 TGT = find
 DEP = $(SRC:.cc=.d)
+CXXFLAGS = -std=c++20
+
 
 all: $(TGT) directory
 
@@ -11,8 +13,9 @@ $(TGT): $(OBJ)
 directory: directory.o
 	g++ -std=c++20 -o $@ $+
 
-%.o: %.c Makefile
-	g++ -std=c++20 -Wall -Werror -MMD -c -o $@ $<
+# the following lines cause errors with argparse.h
+#%.o: %.c Makefile
+#	g++ -std=c++20 -Wall -Werror -MMD -c -o $@ $<
 
 
 clean:

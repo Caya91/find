@@ -4,7 +4,7 @@ akzeptierte Eingabe:
 -type: spezifiziert reguläre dateien oder ordner, aber nicht beides
 -follow: symbolische links muss gefolgt werden
 -xdev: andere disk partitionen sollen nicht beachtet werden
--name: wildcards müssen akzepziert werden
+-name: wildcards müssen akzeptiert werden
 
 treewalker wie zb nftw und ftw müssen selbst gebaut werden!
 
