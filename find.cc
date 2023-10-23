@@ -17,7 +17,7 @@ Type arg_type;
 //std::string root;
 
 Type cast_Type(std::string type);
-void bare(const std::string &path, const std::string& dirname);
+void bare(const std::string &path, const std::string& dirname, const std::string& name);
 
 int main(int argc, char *argv[]) {
     //initialise argument parser
@@ -58,10 +58,9 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
 
-    auto input = find_args.get("-type");
-    std::cout << input << std::endl;
-
     // check for xdev and other options
+
+
 
     arg_type = cast_Type(find_args.get<std::string>("-type"));
     std::cout << arg_type << std::endl;
@@ -78,14 +77,6 @@ int main(int argc, char *argv[]) {
     }else {
         std::cout << "follow not present" << std::endl;
     }
-    if (strcmp(name.c_str(), "*") != 0) {
-        std::cout << "name present:" << find_args.get("-name") <<std::endl;
-
-    }else {
-        std::cout << "name not present" << std::endl;
-    }
-
-
 
 
     //folgende line gibt generelle Information über Argumente zu dem Parser aus
@@ -119,25 +110,29 @@ int main(int argc, char *argv[]) {
     }
 
 
-
-    bare(dirname, dirname);
+    std::cout << find_args.get<std::string>("-name") << std::endl;
+    bare(dirname, dirname, find_args.get<std::string>("-name"));
 
     return 0;
 }
 
-void bare(const std::string &path,const std::string& dirname){
+void bare(const std::string &path,const std::string& dirname, const std::string& name){
     DIR *directory = opendir(path.c_str());
     while (dirent * entry = readdir(directory)) {
         if (strcmp(entry->d_name ,".")==0 || strcmp(entry->d_name, "..") == 0){
             continue;
         }
         else if (entry->d_type == DT_DIR ) {
-            if ( arg_type == Directory || arg_type == All){
-                std::cout << path + "/" + entry->d_name << std::endl;
+            if ( (arg_type == Directory || arg_type == All)
+            && (fnmatch(name.c_str(), entry->d_name,FNM_FILE_NAME)==0))
+            {
+                    std::cout << path + "/" + entry->d_name << std::endl;
             }
-                bare(std::string(path + "/" + entry->d_name), dirname);
+            bare(std::string(path + "/" + entry->d_name), dirname, name);
 
-        } else if (entry->d_type == DT_REG && (arg_type ==File || arg_type == All)) {
+        } else if (entry->d_type == DT_REG && (arg_type ==File || arg_type == All)
+            && (fnmatch(name.c_str(), entry->d_name,FNM_FILE_NAME)==0) ){
+
             std::cout <<path + "/" + entry->d_name << std::endl;;
         } else {
             continue;
