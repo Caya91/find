@@ -11,7 +11,8 @@
 #include <unistd.h>
 
 namespace fs = std::filesystem;
-bool xdev, follow;
+static bool xdev, follow;
+static dev_t dev;
 enum Type{All=0, File=1, Directory=2};
 Type arg_type;
 //std::string root;
@@ -60,18 +61,14 @@ int main(int argc, char *argv[]) {
 
 
 
-    // check for xdev and other options
+    // set global variables
 
     arg_type = cast_Type(find_args.get<std::string>("-type"));
     std::cout << arg_type << std::endl;
     auto name = find_args.get<std::string>("-name");
     follow = find_args.get<bool>("-follow");
     xdev = find_args.get<bool>("-xdev");
-    if (xdev){
-        std::cout << "xdev present" <<  std::endl;
-    }else {
-        std::cout << "xdev not present" << std::endl;
-    }
+
     if (follow){
         std::cout << "follow present" <<  std::endl;
     }else {
@@ -90,6 +87,11 @@ int main(int argc, char *argv[]) {
 
     std::string root = getcwd(nullptr, 0);
     DIR *directory = opendir(dirname.c_str());
+    if (xdev){
+        struct stat statbuf;
+        stat(dirname.c_str(), &statbuf);
+        dev = statbuf.st_dev;
+    }
     if (directory == nullptr) {
         //ist dirname kein Pfad sondern ein direkter Dateiname, printet es den Namen
         // aus und verlässt das if statement
@@ -126,6 +128,12 @@ void bare(const std::string &path,const std::string& dirname, const std::string&
             && (fnmatch(name.c_str(), entry->d_name,FNM_FILE_NAME)==0))
             {
                     std::cout << path + "/" + entry->d_name << std::endl;
+            }
+            if (xdev){
+                struct stat barr_buf;
+                stat(entry->d_name, &barr_buf);
+                if (dev != barr_buf.st_dev) continue;       // falls xdev gesetzt ist, wird nur auf dem aktuellen
+                                                            // Dateisystem gesucht
             }
             bare(std::string(path + "/" + entry->d_name), dirname, name);
 
