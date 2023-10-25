@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
         // aus und verlässt das if statement
 
         auto file_n =fs::status(root + "/" + dirname);
-        if ((is_regular_file(file_n) && arg_type == File ||arg_type ==  All)){
+        if ((is_regular_file(file_n) && ( arg_type == File ||arg_type ==  All))){
             std::cout << dirname << std::endl;
             exit(0);
         }
@@ -141,7 +141,8 @@ void bare(const std::string &path,const std::string& dirname, const std::string&
             && (fnmatch(name.c_str(), entry->d_name,FNM_FILE_NAME)==0) ){
 
             std::cout <<path + "/" + entry->d_name << std::endl;;
-        } else {
+        } else { // vllt müssen noch andere Fälle abgedeckt werden
+                // falls nicht alle files gefunden werden wie sonst im GNU find
             continue;
         }
     }
