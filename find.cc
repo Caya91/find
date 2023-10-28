@@ -10,6 +10,8 @@
 #include "argparse/argparse.hpp"
 #include <unistd.h>
 
+#define Log(x) std::cout << x << std::endl;
+
 namespace fs = std::filesystem;
 static bool xdev, follow;
 static dev_t dev;
@@ -64,17 +66,9 @@ int main(int argc, char *argv[]) {
     // set global variables
 
     arg_type = cast_Type(find_args.get<std::string>("-type"));
-    std::cout << arg_type << std::endl;
     auto name = find_args.get<std::string>("-name");
     follow = find_args.get<bool>("-follow");
     xdev = find_args.get<bool>("-xdev");
-
-    if (follow){
-        std::cout << "follow present" <<  std::endl;
-    }else {
-        std::cout << "follow not present" << std::endl;
-    }
-
 
     //folgende line gibt generelle Information über Argumente zu dem Parser aus
     //std::cout << find_args << std::endl;
@@ -131,8 +125,8 @@ void bare(const std::string &path,const std::string& dirname, const std::string&
             }
             if (xdev){
                 struct stat barr_buf;
-                stat(entry->d_name, &barr_buf);
-                if (dev != barr_buf.st_dev) continue;       // falls xdev gesetzt ist, wird nur auf dem aktuellen
+                stat((path + "/" + entry->d_name).c_str(), &barr_buf);
+                if (dev != barr_buf.st_dev) {continue;}       // falls xdev gesetzt ist, wird nur auf dem aktuellen
                                                             // Dateisystem gesucht
             }
             bare(std::string(path + "/" + entry->d_name), dirname, name);
@@ -141,9 +135,35 @@ void bare(const std::string &path,const std::string& dirname, const std::string&
             && (fnmatch(name.c_str(), entry->d_name,FNM_FILE_NAME)==0) ){
 
             std::cout <<path + "/" + entry->d_name << std::endl;;
-        } else { // vllt müssen noch andere Fälle abgedeckt werden
+        } else if (entry->d_type == DT_LNK && follow){
+            struct stat statbuf;
+            lstat((path + "/" + entry->d_name).c_str(), &statbuf);
+            if (S_ISDIR(statbuf.st_mode)){
+                if ( (arg_type == Directory || arg_type == All)
+                     && (fnmatch(name.c_str(), entry->d_name,FNM_FILE_NAME)==0))
+                {
+                    std::cout << path + "/" + entry->d_name << std::endl;
+                }
+                if (xdev){
+                    struct stat barr_buf;
+                    stat((path + "/" + entry->d_name).c_str(), &barr_buf);
+                    if (dev != barr_buf.st_dev) {continue;}       // falls xdev gesetzt ist, wird nur auf dem aktuellen
+                                                                    // Dateisystem gesucht
+                }
+                Log(entry->d_name)
+                bare(std::string(path + "/" + entry->d_name), dirname, name);
+            } else if (S_ISREG(statbuf.st_mode) && (arg_type ==File || arg_type == All)
+                       && (fnmatch(name.c_str(), entry->d_name,FNM_FILE_NAME)==0) ){
+                Log(entry->d_name)
+                std::cout <<path + "/" + entry->d_name << std::endl;;
+            }
+
+        } else {
+
+            Log(path + "/" + entry->d_name );
+
+            // vllt müssen noch andere Fälle abgedeckt werden
                 // falls nicht alle files gefunden werden wie sonst im GNU find
-            continue;
         }
     }
 }
